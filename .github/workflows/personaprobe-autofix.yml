@@ -47,6 +47,7 @@ jobs:
         continue-on-error: true
         env:
           PERSONAPROBE_FIX_ATTEMPT_ID: ${{ inputs.fix_attempt_id }}
+          PERSONAPROBE_AGENT_COMMAND: ${{ vars.PERSONAPROBE_AGENT_COMMAND }}
         run: npm run personaprobe:autofix -- fix-context.json
 
       - name: Ensure PR artifacts exist

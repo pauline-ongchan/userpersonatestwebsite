@@ -7,6 +7,7 @@ This repository is a static, deployable copy of the Demo-Safe target app.
 - `index.html` redirects to the demo route.
 - `demo-app/index.html` redirects to the account settings demo.
 - `demo-app/account-settings/index.html` is the main account settings demo.
+- `demo-app/account-settings-healed/index.html` is the self-healed variant.
 
 The `.html` files alongside the route folders are kept as direct-file aliases for static hosts and tooling that request the explicit file path.
 

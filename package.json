@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test",
     "personaprobe:autofix": "tsx scripts/personaprobe-autofix.ts"
   },
   "devDependencies": {

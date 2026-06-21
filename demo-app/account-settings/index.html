@@ -13,7 +13,6 @@
         --soft: #f5f7fa;
         --moss: #3c6e47;
         --coral: #cf5f45;
-        --amber: #d89a2b;
       }
 
       * {
@@ -97,8 +96,7 @@
         gap: 28px;
       }
 
-      section,
-      .modal-card {
+      section {
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 20px;
@@ -116,7 +114,6 @@
       }
 
       input[type="email"],
-      input[type="tel"],
       input[type="search"] {
         width: 100%;
         margin-top: 8px;
@@ -131,13 +128,6 @@
       button:focus {
         outline: 2px solid var(--ink);
         outline-offset: 2px;
-      }
-
-      .grid-2 {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-top: 16px;
       }
 
       .choice {
@@ -191,11 +181,6 @@
         color: white;
       }
 
-      .secondary {
-        border: 1px solid #cbd5e1;
-        background: white;
-      }
-
       .success-screen {
         width: min(100% - 40px, 720px);
         margin: 0 auto;
@@ -222,64 +207,18 @@
         font-weight: 900;
       }
 
-      .modal {
-        position: fixed;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        padding: 16px;
-        background: rgba(23, 32, 42, 0.42);
-      }
-
-      .modal-card {
-        width: min(100%, 560px);
-        background: white;
-        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
-      }
-
-      .modal-head {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-      }
-
-      .modal-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 999px;
-        display: grid;
-        place-items: center;
-        flex: none;
-        background: rgba(216, 154, 43, 0.18);
-        color: #8a5a00;
-        font-weight: 900;
-      }
-
-      .modal-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 20px;
-      }
-
       @media (max-width: 760px) {
         .wrap {
           width: min(100% - 28px, 420px);
           padding-top: 24px;
         }
 
-        .layout,
-        .grid-2 {
+        .layout {
           grid-template-columns: 1fr;
         }
 
         form {
           gap: 24px;
-        }
-
-        .save-row {
-          padding-top: 360px;
         }
 
         .primary {
@@ -310,125 +249,61 @@
               />
             </label>
 
-            <p id="search-hint" class="hint">General, billing, privacy, and contact settings</p>
+            <p id="search-hint" class="hint">Account and communication settings</p>
           </aside>
 
           <form>
             <section>
               <h2>Billing contact</h2>
               <label style="margin-top: 16px">
-                <span class="label">Billing email</span>
+                <span class="label">Billing email address</span>
                 <input
                   id="billing-email"
                   data-testid="billing-email"
+                  aria-label="Billing email address"
                   type="email"
                   inputmode="email"
                   placeholder="receipts@example.com"
                 />
-                <span class="help">Used for invoice copies.</span>
+                <span class="help">Used for billing notices, not account sign-in.</span>
               </label>
             </section>
 
             <section>
               <h2>Profile contact</h2>
-              <div class="grid-2">
-                <label>
-                  <span class="label">Account email</span>
-                  <input
-                    id="account-email"
-                    data-testid="account-email"
-                    aria-label="Account email"
-                    type="email"
-                    inputmode="email"
-                    placeholder="account@example.com"
-                  />
-                </label>
-                <label>
-                  <span class="label">Phone number</span>
-                  <input
-                    id="phone-number"
-                    data-testid="phone-number"
-                    aria-label="Optional phone number"
-                    type="tel"
-                    inputmode="tel"
-                    placeholder="Optional"
-                  />
-                </label>
-              </div>
+              <label style="margin-top: 16px">
+                <span class="label">Account email</span>
+                <input
+                  id="account-email"
+                  data-testid="account-email"
+                  aria-label="Account email"
+                  type="email"
+                  inputmode="email"
+                  placeholder="test@example.com"
+                />
+              </label>
             </section>
 
             <section>
               <h2>Communication choices</h2>
               <label class="choice" style="margin-top: 16px">
-                <input id="newsletter-checkbox" data-testid="newsletter-checkbox" type="checkbox" checked />
+                <input id="newsletter-checkbox" data-testid="newsletter-checkbox" type="checkbox" />
                 <span>
-                  <span class="choice-title">Keep me in the loop</span>
-                  <span class="choice-copy">Receive product news and partner updates.</span>
+                  <span class="choice-title">Optional product newsletter</span>
+                  <span class="choice-copy">Off by default.</span>
                 </span>
               </label>
-            </section>
-
-            <section>
-              <h2>Privacy defaults</h2>
-              <div style="display: grid; gap: 12px; margin-top: 16px">
-                <label class="choice">
-                  <input id="tracking-checkbox" data-testid="tracking-checkbox" type="checkbox" checked />
-                  <span>
-                    <span class="choice-title">Personalized product tracking</span>
-                    <span class="choice-copy">Use activity data to tune recommendations.</span>
-                  </span>
-                </label>
-                <label class="choice">
-                  <input id="research-checkbox" data-testid="research-checkbox" type="checkbox" checked />
-                  <span>
-                    <span class="choice-title">Permission for research follow-up</span>
-                    <span class="choice-copy">Allow occasional requests for extra feedback.</span>
-                  </span>
-                </label>
-              </div>
             </section>
 
             <p id="error" class="error"></p>
 
             <div class="save-row">
               <button id="save-preferences" data-testid="save-preferences" class="primary" type="button">
-                Save preferences
+                Update account email
               </button>
             </div>
           </form>
         </div>
-      </div>
-
-      <div id="privacy-modal" class="modal" role="dialog" aria-modal="true">
-        <section class="modal-card">
-          <div class="modal-head">
-            <span class="modal-icon">!</span>
-            <div>
-              <h2>Before saving preferences</h2>
-              <p class="choice-copy">
-                Optional permissions help personalize emails and let the team request follow-up feedback.
-              </p>
-            </div>
-          </div>
-
-          <div style="display: grid; gap: 12px; margin-top: 16px">
-            <label class="choice">
-              <input id="modal-tracking" type="checkbox" checked readonly />
-              <span class="choice-title">Allow product tracking</span>
-            </label>
-            <label class="choice">
-              <input id="modal-research" type="checkbox" checked readonly />
-              <span class="choice-title">Allow research follow-up</span>
-            </label>
-          </div>
-
-          <div class="modal-actions">
-            <button id="modal-reject" data-testid="modal-reject" class="secondary" type="button">
-              Use essentials only
-            </button>
-            <button id="modal-allow" data-testid="modal-allow" class="primary" type="button">Looks fine</button>
-          </div>
-        </section>
       </div>
     </main>
 
@@ -439,16 +314,8 @@
       const hint = $("#search-hint");
       const billingEmail = $("#billing-email");
       const accountEmail = $("#account-email");
-      const phone = $("#phone-number");
-      const newsletter = $("#newsletter-checkbox");
-      const tracking = $("#tracking-checkbox");
-      const research = $("#research-checkbox");
-      const modal = $("#privacy-modal");
       const error = $("#error");
       const saveButton = $("#save-preferences");
-      const healPlan = decodeSelfHealPlan(new URLSearchParams(window.location.search).get("heal"));
-
-      applySelfHealPlan(healPlan);
 
       document.addEventListener("keydown", (event) => {
         const target = event.target;
@@ -466,110 +333,63 @@
           ? "Email appears in billing and account sections"
           : value
             ? "No exact match"
-            : "General, billing, privacy, and contact settings";
-      });
-
-      $("#modal-reject")?.addEventListener("click", () => {
-        tracking.checked = false;
-        research.checked = false;
-        $("#modal-tracking").checked = false;
-        $("#modal-research").checked = false;
-        modal.remove();
-      });
-
-      $("#modal-allow")?.addEventListener("click", () => {
-        modal.remove();
+            : "Account and communication settings";
       });
 
       saveButton.addEventListener("click", () => {
-        if (phone.value && !/^\+?[0-9 ()-]{7,}$/.test(phone.value)) {
-          showError(
-            healPlan?.fixes?.useSpecificErrorMessages
-              ? "Phone number is optional. Remove it or use digits only."
-              : "Some information needs another look."
+        const accountValue = accountEmail.value.trim();
+        const billingValue = billingEmail.value.trim();
+
+        if (accountValue && !isValidEmail(accountValue)) {
+          showError("Email is wrong. Enter a valid account email address.");
+          return;
+        }
+
+        if (billingValue && !isValidEmail(billingValue)) {
+          showError("Email is wrong. Enter a valid billing email address.");
+          return;
+        }
+
+        if (accountValue === "test@example.com") {
+          showSuccess(
+            "Account email changed successfully",
+            `The account email is now ${escapeHtml(accountValue)}.`
           );
           return;
         }
 
-        if (accountEmail.value !== "test@example.com") {
-          showError(
-            healPlan?.fixes?.useSpecificErrorMessages
-              ? "Enter test@example.com in the Account email field."
-              : "We couldn't save everything. Review the details and try again."
+        if (billingValue === "test@example.com") {
+          showSuccess(
+            "Billing address successfully changed",
+            `The billing email address is now ${escapeHtml(billingValue)}. The account email was not changed.`
           );
           return;
         }
 
+        showError("Account email was not changed. Enter test@example.com in the Account email field.");
+      });
+
+      function showSuccess(title, message) {
         document.body.innerHTML = `
           <main>
             <section class="success-screen">
               <div class="success">
                 <div class="success-icon">✓</div>
-                <h1>Email updated successfully</h1>
-                <p class="choice-copy">
-                  The account email is now ${escapeHtml(accountEmail.value)}. Billing notices will keep using
-                  ${escapeHtml(billingEmail.value || "the existing billing contact")}.
-                </p>
+                <h1>${title}</h1>
+                <p class="choice-copy">${message}</p>
               </div>
             </section>
           </main>
         `;
-      });
-
-      function applySelfHealPlan(plan) {
-        if (!plan?.fixes) return;
-
-        document.querySelector(".eyebrow").textContent = "Self-healed settings";
-
-        if (plan.fixes.removeBillingEmailTrap) {
-          billingEmail.closest("section").style.display = "none";
-        }
-
-        if (plan.fixes.removeOptionalPhoneField) {
-          phone.value = "";
-          phone.closest("label").style.display = "none";
-          phone.closest(".grid-2").style.gridTemplateColumns = "1fr";
-        }
-
-        if (plan.fixes.removePermissionsModal) {
-          tracking.checked = false;
-          research.checked = false;
-          modal.remove();
-          tracking.closest("section").style.display = "none";
-        }
-
-        if (plan.fixes.newsletterDefaultChecked === false) {
-          newsletter.checked = false;
-        }
-
-        if (plan.fixes.useExplicitAccountEmailCopy) {
-          accountEmail.placeholder = "test@example.com";
-        }
-
-        if (plan.fixes.useExplicitSaveButton) {
-          saveButton.textContent = "Update account email";
-        }
-
-        if (plan.fixes.keepSaveVisibleOnMobile) {
-          document.querySelector(".save-row").style.paddingTop = "0";
-        }
-      }
-
-      function decodeSelfHealPlan(encoded) {
-        if (!encoded) return null;
-
-        try {
-          const normalized = encoded.replaceAll("-", "+").replaceAll("_", "/");
-          const padded = `${normalized}${"=".repeat((4 - (normalized.length % 4)) % 4)}`;
-          return JSON.parse(window.atob(padded));
-        } catch {
-          return null;
-        }
       }
 
       function showError(message) {
         error.style.display = "block";
         error.textContent = message;
+      }
+
+      function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
       }
 
       function escapeHtml(value) {

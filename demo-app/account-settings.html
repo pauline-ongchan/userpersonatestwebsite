@@ -445,6 +445,10 @@
       const research = $("#research-checkbox");
       const modal = $("#privacy-modal");
       const error = $("#error");
+      const saveButton = $("#save-preferences");
+      const healPlan = decodeSelfHealPlan(new URLSearchParams(window.location.search).get("heal"));
+
+      applySelfHealPlan(healPlan);
 
       document.addEventListener("keydown", (event) => {
         const target = event.target;
@@ -465,7 +469,7 @@
             : "General, billing, privacy, and contact settings";
       });
 
-      $("#modal-reject").addEventListener("click", () => {
+      $("#modal-reject")?.addEventListener("click", () => {
         tracking.checked = false;
         research.checked = false;
         $("#modal-tracking").checked = false;
@@ -473,18 +477,26 @@
         modal.remove();
       });
 
-      $("#modal-allow").addEventListener("click", () => {
+      $("#modal-allow")?.addEventListener("click", () => {
         modal.remove();
       });
 
-      $("#save-preferences").addEventListener("click", () => {
+      saveButton.addEventListener("click", () => {
         if (phone.value && !/^\+?[0-9 ()-]{7,}$/.test(phone.value)) {
-          showError("Some information needs another look.");
+          showError(
+            healPlan?.fixes?.useSpecificErrorMessages
+              ? "Phone number is optional. Remove it or use digits only."
+              : "Some information needs another look."
+          );
           return;
         }
 
         if (accountEmail.value !== "test@example.com") {
-          showError("We couldn't save everything. Review the details and try again.");
+          showError(
+            healPlan?.fixes?.useSpecificErrorMessages
+              ? "Enter test@example.com in the Account email field."
+              : "We couldn't save everything. Review the details and try again."
+          );
           return;
         }
 
@@ -503,6 +515,57 @@
           </main>
         `;
       });
+
+      function applySelfHealPlan(plan) {
+        if (!plan?.fixes) return;
+
+        document.querySelector(".eyebrow").textContent = "Self-healed settings";
+
+        if (plan.fixes.removeBillingEmailTrap) {
+          billingEmail.closest("section").style.display = "none";
+        }
+
+        if (plan.fixes.removeOptionalPhoneField) {
+          phone.value = "";
+          phone.closest("label").style.display = "none";
+          phone.closest(".grid-2").style.gridTemplateColumns = "1fr";
+        }
+
+        if (plan.fixes.removePermissionsModal) {
+          tracking.checked = false;
+          research.checked = false;
+          modal.remove();
+          tracking.closest("section").style.display = "none";
+        }
+
+        if (plan.fixes.newsletterDefaultChecked === false) {
+          newsletter.checked = false;
+        }
+
+        if (plan.fixes.useExplicitAccountEmailCopy) {
+          accountEmail.placeholder = "test@example.com";
+        }
+
+        if (plan.fixes.useExplicitSaveButton) {
+          saveButton.textContent = "Update account email";
+        }
+
+        if (plan.fixes.keepSaveVisibleOnMobile) {
+          document.querySelector(".save-row").style.paddingTop = "0";
+        }
+      }
+
+      function decodeSelfHealPlan(encoded) {
+        if (!encoded) return null;
+
+        try {
+          const normalized = encoded.replaceAll("-", "+").replaceAll("_", "/");
+          const padded = `${normalized}${"=".repeat((4 - (normalized.length % 4)) % 4)}`;
+          return JSON.parse(window.atob(padded));
+        } catch {
+          return null;
+        }
+      }
 
       function showError(message) {
         error.style.display = "block";

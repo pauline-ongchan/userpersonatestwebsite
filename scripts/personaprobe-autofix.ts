@@ -159,6 +159,7 @@ function extractSections(context: unknown): ContextSections {
       "testCase.task",
       "testCase.name",
       "testCase.description",
+      "testCase.taskGoal",
       "task",
       "task.description",
       "task.name",
@@ -203,6 +204,7 @@ function extractSections(context: unknown): ContextSections {
     oracleExpected: pickFirst(context, [
       "oracle.expected",
       "testCase.oracle.expected",
+      "testCase.oracleExpected",
       "testCase.expected",
       "expected",
       "evaluation.expected",
@@ -211,6 +213,7 @@ function extractSections(context: unknown): ContextSections {
     oracleActual: pickFirst(context, [
       "oracle.actual",
       "testCase.oracle.actual",
+      "testCase.oracleActual",
       "testCase.actual",
       "actual",
       "evaluation.actual",
@@ -374,8 +377,18 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
+function renderAgentCommand(command: string, promptPath: string, contextPath: string): string {
+  if (command.includes("{prompt}") || command.includes("{context}")) {
+    return command
+      .replaceAll("{prompt}", shellQuote(promptPath))
+      .replaceAll("{context}", shellQuote(contextPath));
+  }
+
+  return `${command} ${shellQuote(promptPath)} ${shellQuote(contextPath)}`;
+}
+
 function runAgentCommand(command: string, promptPath: string, contextPath: string): AgentResult {
-  const commandLine = `${command} ${shellQuote(promptPath)} ${shellQuote(contextPath)}`;
+  const commandLine = renderAgentCommand(command, promptPath, contextPath);
   const result = spawnSync(commandLine, {
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,

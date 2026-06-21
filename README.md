@@ -30,3 +30,22 @@ Use this URL in PersonaProbe Real Website Mode, or set the main app's `NEXT_PUBL
 ```text
 https://your-vercel-project.vercel.app
 ```
+
+## PersonaProbe Autofix Agent
+
+The GitHub Actions workflow opens draft PRs from PersonaProbe failures. It must run a coding agent; otherwise it fails instead of creating a prompt-only PR.
+
+Default setup:
+
+1. Add repository secret `ANTHROPIC_API_KEY`.
+2. Leave `PERSONAPROBE_AGENT_COMMAND` unset.
+
+The workflow will run Claude Code with:
+
+```bash
+npx --yes @anthropic-ai/claude-code --dangerously-skip-permissions -p "$(cat {prompt})"
+```
+
+To use another agent, set repository variable `PERSONAPROBE_AGENT_COMMAND`. The script supports `{prompt}` and `{context}` placeholders, which are replaced with shell-quoted paths to `personaprobe-autofix-prompt.md` and `fix-context.json`.
+
+If the agent exits successfully but makes no tracked code changes, the workflow fails instead of opening an empty draft PR.

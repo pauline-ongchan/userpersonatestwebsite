@@ -37,6 +37,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure coding agent
+        env:
+          CUSTOM_AGENT_COMMAND: ${{ vars.PERSONAPROBE_AGENT_COMMAND }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$CUSTOM_AGENT_COMMAND" ]; then
+            {
+              echo "PERSONAPROBE_AGENT_COMMAND<<PERSONAPROBE_AGENT_COMMAND_EOF"
+              echo "$CUSTOM_AGENT_COMMAND"
+              echo "PERSONAPROBE_AGENT_COMMAND_EOF"
+            } >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::No coding agent is configured. Set repo variable PERSONAPROBE_AGENT_COMMAND, or add secret ANTHROPIC_API_KEY to use the default Claude Code agent."
+            exit 1
+          fi
+
+          {
+            echo "PERSONAPROBE_AGENT_COMMAND<<PERSONAPROBE_AGENT_COMMAND_EOF"
+            echo 'npx --yes @anthropic-ai/claude-code --dangerously-skip-permissions -p "$(cat {prompt})"'
+            echo "PERSONAPROBE_AGENT_COMMAND_EOF"
+          } >> "$GITHUB_ENV"
+
       - name: Fetch PersonaProbe fix context
         env:
           FIX_CONTEXT_URL: ${{ inputs.fix_context_url }}
@@ -114,10 +141,8 @@ jobs:
 
       - name: Run PersonaProbe autofix
         id: autofix
-        continue-on-error: true
         env:
           PERSONAPROBE_FIX_ATTEMPT_ID: ${{ inputs.fix_attempt_id }}
-          PERSONAPROBE_AGENT_COMMAND: ${{ vars.PERSONAPROBE_AGENT_COMMAND }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npm run personaprobe:autofix -- fix-context.json
 
@@ -163,13 +188,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add -A
-          git reset -- fix-context.json
+          git reset -- fix-context.json personaprobe-autofix-prompt.md pr-body.md
 
           if git diff --cached --quiet; then
-            git commit --allow-empty -m "Add PersonaProbe autofix draft"
-          else
-            git commit -m "Add PersonaProbe autofix draft"
+            echo "::error::The coding agent completed without tracked code changes. Refusing to create an empty autofix PR."
+            exit 1
           fi
+
+          git commit -m "Add PersonaProbe autofix draft"
 
       - name: Push autofix branch
         run: git push --set-upstream origin "personaprobe/fix-${{ github.run_id }}"

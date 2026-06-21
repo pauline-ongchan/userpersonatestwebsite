@@ -315,21 +315,6 @@
 
           <form>
             <section>
-              <h2>Billing contact</h2>
-              <label style="margin-top: 16px">
-                <span class="label">Billing email</span>
-                <input
-                  id="billing-email"
-                  data-testid="billing-email"
-                  type="email"
-                  inputmode="email"
-                  placeholder="receipts@example.com"
-                />
-                <span class="help">Used for invoice copies.</span>
-              </label>
-            </section>
-
-            <section>
               <h2>Profile contact</h2>
               <div class="grid-2">
                 <label>
@@ -355,6 +340,21 @@
                   />
                 </label>
               </div>
+            </section>
+
+            <section>
+              <h2>Billing contact</h2>
+              <label style="margin-top: 16px">
+                <span class="label">Billing email</span>
+                <input
+                  id="billing-email"
+                  data-testid="billing-email"
+                  type="email"
+                  inputmode="email"
+                  placeholder="receipts@example.com"
+                />
+                <span class="help">Used for invoice copies.</span>
+              </label>
             </section>
 
             <section>
@@ -514,7 +514,7 @@
         }
 
         showSuccess(
-          "Account email changed successfully",
+          "Email updated successfully",
           `The account email is now ${escapeHtml(accountValue)}. Billing notices will keep using ${escapeHtml(
             billingValue || "the existing billing contact"
           )}.`

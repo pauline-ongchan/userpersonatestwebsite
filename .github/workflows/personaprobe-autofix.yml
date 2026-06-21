@@ -1,0 +1,112 @@
+name: PersonaProbe Autofix
+
+on:
+  workflow_dispatch:
+    inputs:
+      fix_context_url:
+        description: URL to the PersonaProbe fix context JSON.
+        required: true
+        type: string
+      fix_attempt_id:
+        description: PersonaProbe fix attempt identifier.
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autofix:
+    name: PersonaProbe Autofix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create autofix branch
+        run: git switch -c "personaprobe/fix-${{ github.run_id }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch fix context
+        env:
+          FIX_CONTEXT_URL: ${{ inputs.fix_context_url }}
+        run: curl --fail --location --show-error --silent "$FIX_CONTEXT_URL" --output fix-context.json
+
+      - name: Run PersonaProbe autofix
+        id: autofix
+        continue-on-error: true
+        env:
+          PERSONAPROBE_FIX_ATTEMPT_ID: ${{ inputs.fix_attempt_id }}
+        run: npm run personaprobe:autofix -- fix-context.json
+
+      - name: Ensure PR artifacts exist
+        if: always()
+        run: |
+          if [ ! -s pr-body.md ]; then
+            {
+              echo "## PersonaProbe Autofix"
+              echo
+              echo "This is an automatically generated draft PR and must be reviewed before merging. It will not be auto-merged."
+              echo
+              echo "### Autofix status"
+              echo "The autofix workflow did not produce a PR body. Review the workflow logs before merging."
+            } > pr-body.md
+          fi
+
+          if [ ! -s personaprobe-autofix-prompt.md ]; then
+            {
+              echo "# PersonaProbe Autofix Prompt"
+              echo
+              echo "The autofix workflow did not produce a prompt. Review the workflow logs before merging."
+            } > personaprobe-autofix-prompt.md
+          fi
+
+      - name: Run lint if available
+        continue-on-error: true
+        run: npm run --if-present lint
+
+      - name: Run tests if available
+        continue-on-error: true
+        run: npm run --if-present test
+
+      - name: Run build if available
+        continue-on-error: true
+        run: npm run --if-present build
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git reset -- fix-context.json
+
+          if git diff --cached --quiet; then
+            git commit --allow-empty -m "Add PersonaProbe autofix draft"
+          else
+            git commit -m "Add PersonaProbe autofix draft"
+          fi
+
+      - name: Push branch
+        run: git push --set-upstream origin "personaprobe/fix-${{ github.run_id }}"
+
+      - name: Create draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr create
+          --draft
+          --base "${{ github.event.repository.default_branch }}"
+          --head "personaprobe/fix-${{ github.run_id }}"
+          --title "Fix UI-agent failure detected by PersonaProbe"
+          --body-file pr-body.md

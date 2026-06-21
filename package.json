@@ -1,0 +1,12 @@
+{
+  "name": "userpersonatestwebsite",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "personaprobe:autofix": "tsx scripts/personaprobe-autofix.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
+  }
+}

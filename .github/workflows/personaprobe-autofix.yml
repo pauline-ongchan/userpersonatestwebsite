@@ -45,8 +45,15 @@ jobs:
 
           normalized_url=$(node -e '
             const value = String(process.env.FIX_CONTEXT_URL || "").trim();
-            const markdown = value.match(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/i);
-            let normalized = markdown ? markdown[1] : value;
+            const prefixedMarkdown = value.match(/^https?:\/\/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)(.*)$/i);
+            const markdown = value.match(/^\[[^\]]+\]\((https?:\/\/[^)\s]+)\)(.*)$/i);
+            const match = prefixedMarkdown || markdown;
+            let normalized = value;
+            if (match) {
+              const base = match[1].replace(/\/$/, "");
+              const suffix = String(match[2] || "");
+              normalized = suffix ? `${base}${suffix.startsWith("/") ? suffix : `/${suffix}`}` : base;
+            }
             normalized = normalized.replace(/^<|>$/g, "").trim();
             if (!/^https?:\/\//i.test(normalized) && /^[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(normalized)) {
               normalized = `https://${normalized}`;
@@ -63,6 +70,14 @@ jobs:
 
           echo "::add-mask::$normalized_url"
           curl --fail --location --silent --show-error "$normalized_url" --output fix-context.json
+
+          if ! jq -e . fix-context.json > /dev/null; then
+            echo "::error::PersonaProbe fix context response was not JSON. Check that PERSONAPROBE_APP_URL points to the public PersonaProbe deployment and that the signed fix-context URL includes /api/fix-context/..."
+            echo "Response preview:"
+            head -c 500 fix-context.json | tr "\n" " "
+            echo
+            exit 1
+          fi
 
           callback_url=$(jq -r '.callback.url // ""' fix-context.json)
           callback_token=$(jq -r '.callback.bearerToken // ""' fix-context.json)

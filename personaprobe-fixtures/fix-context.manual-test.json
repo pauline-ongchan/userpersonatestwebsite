@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "testCase": {
+    "id": "manual-test-001",
+    "task": "Update account settings and save the notification email"
+  },
+  "target": {
+    "url": "https://example.com/demo-app/account-settings",
+    "route": "/demo-app/account-settings"
+  },
+  "browserbase": {
+    "replayUrl": "https://browserbase.com/session/manual-test-placeholder",
+    "sessionId": "manual-test-session"
+  },
+  "sentry": {
+    "eventUrl": "https://sentry.io/organizations/example/issues/123/events/456/",
+    "message": "Manual PersonaProbe smoke-test context"
+  },
+  "actionTrace": [
+    {
+      "step": 1,
+      "action": "open",
+      "target": "/demo-app/account-settings"
+    },
+    {
+      "step": 2,
+      "action": "click",
+      "target": "Save changes"
+    },
+    {
+      "step": 3,
+      "action": "observe",
+      "result": "Expected save confirmation"
+    }
+  ]
+}

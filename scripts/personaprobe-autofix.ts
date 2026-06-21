@@ -156,6 +156,9 @@ function extractSections(context: unknown): ContextSections {
     failedTask: pickFirst(context, [
       "failed_task",
       "failedTask",
+      "testCase.task",
+      "testCase.name",
+      "testCase.description",
       "task",
       "task.description",
       "task.name",
@@ -167,6 +170,7 @@ function extractSections(context: unknown): ContextSections {
     ]),
     persona: pickFirst(context, [
       "persona",
+      "testCase.persona",
       "user_persona",
       "userPersona",
       "test_persona",
@@ -176,6 +180,9 @@ function extractSections(context: unknown): ContextSections {
     failureReason: pickFirst(context, [
       "failure_reason",
       "failureReason",
+      "testCase.failure_reason",
+      "testCase.failureReason",
+      "testCase.reason",
       "reason",
       "error",
       "failure.message",
@@ -186,6 +193,7 @@ function extractSections(context: unknown): ContextSections {
     ]),
     oracle: pickFirst(context, [
       "oracle",
+      "testCase.oracle",
       "expected_vs_actual",
       "expectedActual",
       "assertion",
@@ -194,12 +202,16 @@ function extractSections(context: unknown): ContextSections {
     ]),
     oracleExpected: pickFirst(context, [
       "oracle.expected",
+      "testCase.oracle.expected",
+      "testCase.expected",
       "expected",
       "evaluation.expected",
       "result.expected",
     ]),
     oracleActual: pickFirst(context, [
       "oracle.actual",
+      "testCase.oracle.actual",
+      "testCase.actual",
       "actual",
       "evaluation.actual",
       "result.actual",

@@ -2,7 +2,16 @@
   "version": 1,
   "testCase": {
     "id": "manual-test-001",
-    "task": "Update account settings and save the notification email"
+    "task": "Update account settings and save the notification email",
+    "persona": {
+      "name": "Manual smoke-test persona",
+      "goal": "Confirm the PersonaProbe autofix workflow can fetch and process context"
+    },
+    "failureReason": "Manual test context used to validate the GitHub Actions autofix path",
+    "oracle": {
+      "expected": "The workflow fetches context, generates a prompt and PR body, pushes a branch, and opens a draft PR.",
+      "actual": "The smoke test should show this evidence in the generated draft PR."
+    }
   },
   "target": {
     "url": "https://example.com/demo-app/account-settings",

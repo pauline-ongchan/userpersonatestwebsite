@@ -40,7 +40,62 @@ jobs:
       - name: Fetch PersonaProbe fix context
         env:
           FIX_CONTEXT_URL: ${{ inputs.fix_context_url }}
-        run: curl --fail --location --silent --show-error "$FIX_CONTEXT_URL" --output fix-context.json
+        run: |
+          set -euo pipefail
+
+          normalized_url=$(node -e '
+            const value = String(process.env.FIX_CONTEXT_URL || "").trim();
+            const markdown = value.match(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/i);
+            let normalized = markdown ? markdown[1] : value;
+            normalized = normalized.replace(/^<|>$/g, "").trim();
+            if (!/^https?:\/\//i.test(normalized) && /^[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(normalized)) {
+              normalized = `https://${normalized}`;
+            }
+            try {
+              const url = new URL(normalized);
+              if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Expected http(s)");
+              console.log(url.toString());
+            } catch {
+              console.error("Invalid PersonaProbe fix_context_url. Expected a plain http(s) URL.");
+              process.exit(1);
+            }
+          ')
+
+          echo "::add-mask::$normalized_url"
+          curl --fail --location --silent --show-error "$normalized_url" --output fix-context.json
+
+          callback_url=$(jq -r '.callback.url // ""' fix-context.json)
+          callback_token=$(jq -r '.callback.bearerToken // ""' fix-context.json)
+
+          if [ -n "$callback_token" ]; then
+            echo "::add-mask::$callback_token"
+          fi
+
+          {
+            echo "PERSONAPROBE_CALLBACK_URL=$callback_url"
+            echo "PERSONAPROBE_CALLBACK_TOKEN=$callback_token"
+          } >> "$GITHUB_ENV"
+
+          if [ -n "$callback_url" ] && [ -n "$callback_token" ]; then
+            body=$(jq -n \
+              --arg status "CONTEXT_FETCHED" \
+              --arg runId "$GITHUB_RUN_ID" \
+              --arg runUrl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+              '{
+                status: $status,
+                githubWorkflowRunId: $runId,
+                evidence: {
+                  workflowRunUrl: $runUrl
+                }
+              }')
+
+            curl --fail --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer $callback_token" \
+              --header "Content-Type: application/json" \
+              --data "$body" \
+              "$callback_url" || true
+          fi
 
       - name: Run PersonaProbe autofix
         id: autofix
@@ -105,12 +160,83 @@ jobs:
         run: git push --set-upstream origin "personaprobe/fix-${{ github.run_id }}"
 
       - name: Create draft PR
+        id: create_pr
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh pr create
-          --draft
-          --base "${{ github.event.repository.default_branch }}"
-          --head "personaprobe/fix-${{ github.run_id }}"
-          --title "Fix UI-agent failure detected by PersonaProbe"
-          --body-file pr-body.md
+        run: |
+          pr_url=$(gh pr create \
+            --draft \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "personaprobe/fix-${{ github.run_id }}" \
+            --title "Fix UI-agent failure detected by PersonaProbe" \
+            --body-file pr-body.md)
+
+          echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+
+      - name: Report PersonaProbe PR
+        if: success()
+        env:
+          CALLBACK_TOKEN: ${{ env.PERSONAPROBE_CALLBACK_TOKEN }}
+          CALLBACK_URL: ${{ env.PERSONAPROBE_CALLBACK_URL }}
+          PR_URL: ${{ steps.create_pr.outputs.pr_url }}
+        run: |
+          if [ -z "$CALLBACK_URL" ] || [ -z "$CALLBACK_TOKEN" ] || [ -z "$PR_URL" ]; then
+            exit 0
+          fi
+
+          commit_sha=$(git rev-parse HEAD)
+          body=$(jq -n \
+            --arg status "PR_OPENED" \
+            --arg prUrl "$PR_URL" \
+            --arg runId "$GITHUB_RUN_ID" \
+            --arg runUrl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg branch "personaprobe/fix-${GITHUB_RUN_ID}" \
+            --arg commitSha "$commit_sha" \
+            '{
+              status: $status,
+              prUrl: $prUrl,
+              githubWorkflowRunId: $runId,
+              evidence: {
+                workflowRunUrl: $runUrl,
+                branch: $branch,
+                commitSha: $commitSha
+              }
+            }')
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CALLBACK_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            "$CALLBACK_URL" || true
+
+      - name: Report PersonaProbe failure
+        if: failure()
+        env:
+          CALLBACK_TOKEN: ${{ env.PERSONAPROBE_CALLBACK_TOKEN }}
+          CALLBACK_URL: ${{ env.PERSONAPROBE_CALLBACK_URL }}
+        run: |
+          if [ -z "$CALLBACK_URL" ] || [ -z "$CALLBACK_TOKEN" ]; then
+            exit 0
+          fi
+
+          body=$(jq -n \
+            --arg status "FAILED" \
+            --arg runId "$GITHUB_RUN_ID" \
+            --arg runUrl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg errorMessage "PersonaProbe autofix workflow failed before opening a draft PR." \
+            '{
+              status: $status,
+              githubWorkflowRunId: $runId,
+              errorMessage: $errorMessage,
+              evidence: {
+                workflowRunUrl: $runUrl
+              }
+            }')
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CALLBACK_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            "$CALLBACK_URL" || true
